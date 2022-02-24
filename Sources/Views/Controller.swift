@@ -381,15 +381,12 @@ public class FastisController<Value: FastisValue>: UIViewController, JTACMonthVi
         var startDate = dateFormatter.date(from: "2000 01 01")!
         var endDate = dateFormatter.date(from: "2030 12 01")!
 
-        if let maximumDate = self.privateMaximumDate,
-            let endOfNextMonth = self.currentCalendar.date(byAdding: .month, value: 2, to: maximumDate)?
-                .endOfMonth(in: self.currentCalendar) {
+        if let maximumDate = self.privateMaximumDate {
+            let endOfNextMonth = maximumDate.endOfMonth(in: self.currentCalendar)
             endDate = endOfNextMonth
         }
-
-        if let minimumDate = self.privateMinimumDate,
-            let startOfPreviousMonth = self.currentCalendar.date(byAdding: .month, value: -2, to: minimumDate)?
-                .startOfMonth(in: self.currentCalendar) {
+        if let minimumDate = self.privateMinimumDate {
+            let startOfPreviousMonth = minimumDate.startOfMonth(in: self.currentCalendar)
             startDate = startOfPreviousMonth
         }
 

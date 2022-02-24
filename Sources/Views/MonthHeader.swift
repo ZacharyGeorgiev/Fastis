@@ -17,6 +17,8 @@ class MonthHeader: JTACMonthReusableView {
     private lazy var monthLabel: UILabel = {
         let label = UILabel()
         label.text = "Month name"
+        label.isAccessibilityElement = true
+        label.accessibilityHint = "Calendar month. Double tap to select."
         return label
     }()
 
@@ -59,6 +61,7 @@ class MonthHeader: JTACMonthReusableView {
 
     internal func configure(for date: Date) {
         self.monthLabel.text = self.monthFormatter.string(from: date).capitalizingFirstLetter()
+        self.monthLabel.accessibilityLabel = self.monthLabel.text
     }
 
     // MARK: - Actions

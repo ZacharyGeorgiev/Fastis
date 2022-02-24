@@ -63,6 +63,8 @@ class WeekView: UIView {
         label.font = self.config.textFont
         label.textColor = self.config.textColor
         label.textAlignment = .center
+        label.isAccessibilityElement = false
+        label.accessibilityLabel = ""
         return label
     }
 

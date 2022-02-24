@@ -18,6 +18,8 @@ class DayCell: JTACDayCell {
         let label = UILabel()
         label.text = "1"
         label.textAlignment = .center
+        label.isAccessibilityElement = false
+        label.accessibilityLabel = ""
         return label
     }()
 
@@ -185,6 +187,7 @@ class DayCell: JTACDayCell {
         }
 
         config.dateLabelText = state.text
+        config.accessibilityText = state.date.getAccessibilityDateString()
 
         if let minimumDate = minimumDate, state.date < minimumDate.startOfDay() {
             config.isDateEnabled = false
@@ -265,21 +268,28 @@ class DayCell: JTACDayCell {
 
     struct ViewConfig {
         var dateLabelText: String?
+        var accessibilityText: String?
         var isSelectedViewHidden: Bool = true
         var isDateEnabled: Bool = true
         var rangeView: RangeViewConfig = RangeViewConfig()
     }
 
     internal func configure(for config: ViewConfig) {
-
         self.selectionBackgroundView.isHidden = config.isSelectedViewHidden
         self.isUserInteractionEnabled = config.dateLabelText != nil && config.isDateEnabled
 
         if let dateLabelText = config.dateLabelText {
             self.dateLabel.isHidden = false
             self.dateLabel.text = dateLabelText
+            self.isAccessibilityElement = true
+            self.accessibilityHint = "Date"
+            self.accessibilityLabel = config.accessibilityText
+            if !self.isSelected {
+                self.accessibilityHint? += ". Double tap to select."
+            }
             if !config.isDateEnabled {
                 self.dateLabel.textColor = self.config.dateLabelUnavailableColor
+                self.isAccessibilityElement = false
             } else if !config.isSelectedViewHidden {
                 self.dateLabel.textColor = self.config.selectedLabelColor
             } else if !config.rangeView.isHidden {
@@ -290,21 +300,19 @@ class DayCell: JTACDayCell {
 
         } else {
             self.dateLabel.isHidden = true
+            self.isAccessibilityElement = false
         }
 
         self.rangedBackgroundViewRoundedLeft.isHidden = config.rangeView.roundedLeftHidden
         self.rangedBackgroundViewSquaredLeft.isHidden = config.rangeView.squaredLeftHidden
         self.rangedBackgroundViewRoundedRight.isHidden = config.rangeView.roundedRightHidden
         self.rangedBackgroundViewSquaredRight.isHidden = config.rangeView.squaredRightHidden
-
     }
 
 }
 
 extension FastisConfig {
-
     public struct DayCell {
-
         public var dateLabelFont: UIFont = .systemFont(ofSize: 17)
         public var dateLabelColor: UIColor = .black
         public var dateLabelUnavailableColor: UIColor = .lightGray
@@ -323,4 +331,34 @@ extension FastisConfig {
         public var customSelectionViewCornerRadius: CGFloat?
     }
 
+}
+
+private extension Date {
+    func getAccessibilityDateString() -> String {
+        let dateFormatter = DateFormatter()
+        
+        dateFormatter.dateFormat = self.dateFormatWithSuffix()
+        
+        return dateFormatter.string(from: self)
+    }
+    
+    func dateFormatWithSuffix() -> String {
+        return "dd'\(self.daySuffix())' 'of' MMMM (EEEE)"
+    }
+
+    func daySuffix() -> String {
+        let calendar = Calendar.current
+        let components = (calendar as NSCalendar).components(.day, from: self)
+        let dayOfMonth = components.day
+        switch dayOfMonth {
+        case 1, 21, 31:
+            return "st"
+        case 2, 22:
+            return "nd"
+        case 3, 23:
+            return "rd"
+        default:
+            return "th"
+        }
+    }
 }
