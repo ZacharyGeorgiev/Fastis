@@ -59,22 +59,6 @@ public class FastisController<Value: FastisValue>: UIViewController, JTACMonthVi
         return WeekView(config: self.config.weekView)
     }()
 
-    private lazy var currentValueView: CurrentValueView<Value> = {
-        let view = CurrentValueView<Value>(config: self.config.currentValueView)
-        view.currentValue = self.value
-        view.onClear = {
-            self.value = nil
-            self.viewConfigs.removeAll()
-            self.calendarView.deselectAllDates()
-            self.calendarView.visibleDates { (segment) in
-                UIView.performWithoutAnimation {
-                    self.calendarView.reloadItems(at: (segment.outdates + segment.indates).map({ $0.indexPath }))
-                }
-            }
-        }
-        return view
-    }()
-
     private lazy var shortcutContainerView: ShortcutContainerView<Value> = {
         let view = ShortcutContainerView<Value>(config: self.config.shortcutContainerView, itemConfig: self.config.shortcutItemView, shortcuts: self.shortcuts)
         if let value = self.value {
@@ -104,7 +88,6 @@ public class FastisController<Value: FastisValue>: UIViewController, JTACMonthVi
     private var value: Value? {
         didSet {
             self.updateSelectedShortcut()
-            self.currentValueView.currentValue = self.value
             self.doneBarButtonItem.isEnabled = self.allowToChooseNilDate || self.value != nil
         }
     }
@@ -244,7 +227,6 @@ public class FastisController<Value: FastisValue>: UIViewController, JTACMonthVi
     private func configureSubviews() {
         self.calendarView.register(DayCell.self, forCellWithReuseIdentifier: self.dayCellReuseIdentifier)
         self.calendarView.register(MonthHeader.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: self.monthHeaderReuseIdentifier)
-        self.view.addSubview(self.currentValueView)
         self.view.addSubview(self.weekView)
         self.view.addSubview(self.calendarView)
         if !self.shortcuts.isEmpty {
@@ -253,12 +235,8 @@ public class FastisController<Value: FastisValue>: UIViewController, JTACMonthVi
     }
 
     private func configureConstraints() {
-        self.currentValueView.snp.makeConstraints { (maker) in
-            maker.top.equalTo(self.view.safeAreaLayoutGuide)
-            maker.left.right.equalToSuperview().inset(12)
-        }
         self.weekView.snp.makeConstraints { (maker) in
-            maker.top.equalTo(self.currentValueView.snp.bottom)
+            maker.top.equalTo(self.view.safeAreaLayoutGuide)
             maker.left.right.equalToSuperview().inset(12)
         }
         if !self.shortcuts.isEmpty {
