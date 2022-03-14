@@ -70,8 +70,10 @@ class MonthHeader: JTACMonthReusableView {
         self.monthFormatter.dateFormat = config.monthFormat
         self.monthFormatter.locale = config.monthLocale
         self.monthLabel.font = config.labelFont
+        self.monthLabel.adjustsFontForContentSizeCategory = true
         self.monthLabel.textColor = config.labelColor
         self.monthLabel.textAlignment = config.labelAlignment
+        self.monthLabel.numberOfLines = 0
         self.insetConstraint?.update(inset: config.insets)
     }
 
@@ -82,14 +84,14 @@ class MonthHeader: JTACMonthReusableView {
 }
 
 extension FastisConfig {
-
     public struct MonthHeader {
         public var labelAlignment: NSTextAlignment = .left
         public var labelColor: UIColor = .black
-        public var labelFont: UIFont = .systemFont(ofSize: 17, weight: .semibold)
+        public var labelFont: UIFont { UIFontMetrics(forTextStyle: .headline).scaledFont(for: .systemFont(ofSize: 17, weight: .semibold), maximumPointSize: 45) }
         public var insets: UIEdgeInsets = UIEdgeInsets(top: 24, left: 8, bottom: 4, right: 16)
         public var monthFormat: String = "LLLL yyyy"
         public var monthLocale: Locale = .current
+//        public var size: MonthSize = .init(defaultSize: UIFontMetrics.default.scaledValue(for: 48))
         public var size: MonthSize = .init(defaultSize: 48)
     }
 

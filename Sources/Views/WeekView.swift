@@ -59,12 +59,15 @@ class WeekView: UIView {
 
     func makeWeekLabel(for simbol: String) -> UILabel {
         let label = UILabel()
+        
         label.text = self.config.uppercaseWeekName ? simbol.uppercased() : simbol
         label.font = self.config.textFont
         label.textColor = self.config.textColor
         label.textAlignment = .center
         label.isAccessibilityElement = false
         label.accessibilityLabel = ""
+        label.adjustsFontForContentSizeCategory = true
+        
         return label
     }
 
@@ -77,7 +80,6 @@ class WeekView: UIView {
             maker.height.equalTo(self.config.height)
         }
     }
-
 }
 
 extension FastisConfig {
@@ -85,7 +87,7 @@ extension FastisConfig {
         public var calendar: Calendar = .current
         public var backgroundColor: UIColor = .white
         public var textColor: UIColor = .darkGray
-        public var textFont: UIFont = .systemFont(ofSize: 10, weight: .bold)
+        public var textFont: UIFont = UIFontMetrics(forTextStyle: .caption2).scaledFont(for: .boldSystemFont(ofSize: 10), maximumPointSize: 23)
         public var height: CGFloat = 28
         public var cornerRadius: CGFloat = 8
         public var uppercaseWeekName: Bool = true

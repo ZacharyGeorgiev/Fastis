@@ -20,6 +20,7 @@ class DayCell: JTACDayCell {
         label.textAlignment = .center
         label.isAccessibilityElement = false
         label.accessibilityLabel = ""
+        label.adjustsFontForContentSizeCategory = true
         return label
     }()
 
@@ -92,7 +93,11 @@ class DayCell: JTACDayCell {
              self.selectionBackgroundView.layer.cornerRadius = cornerRadius
         }
         self.rangedBackgroundViewTopBootomConstraints.forEach({
-            $0.update(inset: config.rangedBackgroundViewInset)
+            var inset = config.rangedBackgroundViewInset
+            if traitCollection.preferredContentSizeCategory.isAccessibilityCategory {
+                inset = 15
+            }
+            $0.update(inset: inset)
         })
     }
 
@@ -103,7 +108,6 @@ class DayCell: JTACDayCell {
         self.contentView.addSubview(self.rangedBackgroundViewSquaredRight)
         self.contentView.addSubview(self.selectionBackgroundView)
         self.contentView.addSubview(self.dateLabel)
-        self.selectionBackgroundView.layer.cornerRadius = .minimum(self.frame.width, self.frame.height) / 2
     }
 
     public func configureConstraints() {
@@ -128,12 +132,21 @@ class DayCell: JTACDayCell {
             rangedBackgroundViewTopBootomConstraints.append(maker.bottom.top.equalToSuperview().inset(inset).constraint)
             maker.width.equalToSuperview().dividedBy(2)
         }
-        self.selectionBackgroundView.snp.makeConstraints { (maker) in
-            maker.height.equalTo(100).priority(.low)
-            maker.top.left.greaterThanOrEqualToSuperview()
-            maker.right.bottom.lessThanOrEqualToSuperview()
-            maker.center.equalToSuperview()
-            maker.width.equalTo(self.selectionBackgroundView.snp.height)
+        selectionBackgroundView.snp.removeConstraints()
+        if self.frame.width < self.frame.height {
+            self.selectionBackgroundView.snp.makeConstraints { (maker) in
+                maker.width.equalToSuperview()
+                maker.center.equalToSuperview()
+                maker.height.equalTo(self.selectionBackgroundView.snp.width)
+            }
+            self.selectionBackgroundView.layer.cornerRadius = self.frame.width / 2
+        } else {
+            self.selectionBackgroundView.snp.makeConstraints { (maker) in
+                maker.height.equalToSuperview()
+                maker.center.equalToSuperview()
+                maker.width.equalTo(self.selectionBackgroundView.snp.height)
+            }
+            self.selectionBackgroundView.layer.cornerRadius = self.frame.height / 2
         }
         self.dateLabel.snp.makeConstraints { (maker) in
             maker.edges.equalToSuperview()
@@ -313,7 +326,7 @@ class DayCell: JTACDayCell {
 
 extension FastisConfig {
     public struct DayCell {
-        public var dateLabelFont: UIFont = .systemFont(ofSize: 17)
+        public var dateLabelFont: UIFont = UIFontMetrics(forTextStyle: .body).scaledFont(for: .systemFont(ofSize: 17), maximumPointSize: 32)
         public var dateLabelColor: UIColor = .black
         public var dateLabelUnavailableColor: UIColor = .lightGray
 

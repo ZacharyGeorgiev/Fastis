@@ -47,7 +47,7 @@ public class FastisController<Value: FastisValue>: UIViewController, JTACMonthVi
         monthView.minimumLineSpacing = 2
         monthView.minimumInteritemSpacing = 0
         monthView.showsVerticalScrollIndicator = false
-        monthView.cellSize = 46
+        monthView.cellSize = min(UIFontMetrics.default.scaledValue(for: 46), 80)
         monthView.allowsMultipleSelection = Value.mode == .range
         monthView.allowsRangedSelection = true
         monthView.rangeSelectionMode = .continuous
@@ -76,7 +76,7 @@ public class FastisController<Value: FastisValue>: UIViewController, JTACMonthVi
 
     // MARK: - Variables
 
-    private let config: FastisConfig
+    private var config: FastisConfig
     private var appearance: FastisConfig.Controller = FastisConfig.default.controller
     private let dayCellReuseIdentifier = "DayCellReuseIdentifier"
     private let monthHeaderReuseIdentifier = "MonthHeaderReuseIdentifier"
@@ -183,6 +183,24 @@ public class FastisController<Value: FastisValue>: UIViewController, JTACMonthVi
         self.configureSubviews()
         self.configureConstraints()
         self.configureInitialState()
+    }
+    
+    public override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        
+//        calendarView.reloadItems(at: calendarView.indexPathsForVisibleItems)
+//        print("index paths for visible items: \(calendarView.indexPathsForVisibleItems)")
+        
+//        print("Trait collection did change. Previous cell size: \(calendarView.cellSize)")
+        calendarView.cellSize = min(UIFontMetrics.default.scaledValue(for: 46), 80)
+//        print("New cell size: \(calendarView.cellSize)")
+        calendarView.reloadData(withAnchor: nil, completionHandler: nil)
+        calendarView.visibleDates { (segment) in
+            UIView.performWithoutAnimation {
+                self.calendarView.reloadItems(at: (segment.outdates + segment.indates).map({ $0.indexPath }))
+            }
+        }
+        
     }
 
     /**
@@ -355,9 +373,7 @@ public class FastisController<Value: FastisValue>: UIViewController, JTACMonthVi
 
             self.value = newValue as? Value
             self.selectValue(newValue as? Value, in: calendar)
-
         }
-
     }
 
     private func selectRange(_ range: FastisRange, in calendar: JTACMonthView) {
@@ -464,9 +480,26 @@ public class FastisController<Value: FastisValue>: UIViewController, JTACMonthVi
     }
 
     public func calendarSizeForMonths(_ calendar: JTACMonthView?) -> MonthSize? {
+        let monthHeight = "December 2022".height(with: self.config.monthHeader.labelFont, width: UIScreen.main.bounds.width - 40)
+        let monthVerticalMargins = self.config.monthHeader.insets.top + self.config.monthHeader.insets.bottom
+        self.config.monthHeader.size = .init(defaultSize: monthHeight + monthVerticalMargins)
+        
         return self.config.monthHeader.size
     }
+}
 
+extension String {
+    func height(with font: UIFont, width: CGFloat = UIScreen.main.bounds.width) -> CGFloat {
+        return bounds(with: font, width: width).height
+    }
+}
+
+private extension String {
+    func bounds(with font: UIFont, width: CGFloat = UIScreen.main.bounds.width) -> CGRect {
+        let attrString = NSAttributedString(string: self, attributes: [NSAttributedString.Key.font: font])
+        let bounds = attrString.boundingRect(with: CGSize(width: width, height: .greatestFiniteMagnitude), options: .usesLineFragmentOrigin, context: nil)
+        return bounds
+    }
 }
 
 extension FastisController where Value == FastisRange {
